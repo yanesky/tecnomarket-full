@@ -1,0 +1,88 @@
+templates
+templates con un campo many to many
+modelo : autor_id = models.ManyToManyField(Autor) 
+
+{% for libro in object_list %}
+	nota: aqui libro.autor_id(deben ser varias ordenadas en una lista de objectos), recuerde que object_list
+	      trae una lista de objetos, y por cada objecto viene el campo autor_id (que tambien es una lista)
+     <tr>
+         <td>{{ libro.id }}</td>
+         <td>{{ libro.titulo }}</td>
+         <td>{% for i in libro.autor_id.all %}<li>{{ i.apellidos }}</li>{% endfor %}</td>
+         <td>{{ libro.fecha_publicacion }}</td>
+         <td>
+         <a href="#" class="btn btn-primary">Editar</a>
+         <a href="#" class="btn btn-danger">Eliminar</a>
+         </td>
+      </tr>
+{% endfor %}
+
+***************************************vista modales********************
+ej: esta es a la que apuntara las vista, este sera un archivo html (xxxx.html)
+ <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5>este es mi modal que se representa en el div id='edicion' </h5>
+            <h2 class="modal-title">Edicion de Libro</h2>
+            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <form action="">
+            <div class="modal-body">
+                {{ form.as_p }}
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" type="button" data-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" type="submit">Confirmar</button>
+            </div>
+        </form>
+    </div>
+ </div>
+///////////////////////////////////////////luego//////////////////////
+luego me ubico en el template que va a quedar por debajo de mi modal, o mejor dicho
+donde se generar el accionar, es decir, al darle al boton en ese sitio se mostrara el template.
+y esto se coloca en el template que queda abajo:
+<h4>aqui va mi modal</h4>
+<div class="modal fade" id="edicion" role="dialog">
+	javascript se encarga de montar aca el template de arriba xxxx.html
+</div>
+
+y abajito en el bloque de javascript se pone:
+{% block extrajs %}
+
+<script type="text/javascript">
+    var $ = jQuery.noConflict();
+    function abrir_modal_edicion(url){
+      $('#edicion').load(url, function(){
+        $(this).modal('show');
+      });
+    }
+</script>
+
+y muy portante el botton que llamara la funcion:
+ <button class="btn btn-primary" onclick="abrir_modal_edicion('{% url 'libro:editar_libros' libro.id %}')" >Editar</button>
+
+*********************************************************************************************************************
+llamado de una ruta desde base de datos:
+ <img src="{{ i.imagen.url }}" alt="imagen producto">
+FILTROS:
+	<h5>{{ i.marca.nombre | capfirst }}</h5>   //PARA MAYUSCULA
+	<h2>{{ i.nombre | title }}</h2>		   //PARA NEGRITA
+	{% load humanize %} 'para que se ve lo de abajo' y debe colocarse tambien en el settings en las app --> 'django.contrib.humanize',
+        <h3>${{ i.precio | intcomma }}</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

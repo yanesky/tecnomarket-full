@@ -1,0 +1,46 @@
+static_url
+staticfiles_dir
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/2.0/howto/static-files/
+file setttings --> configurar 
+STATIC_URL = '/static/'
+STATICFILES_DIRS = (BASE_DIR,'static')
+STATICFILES_DIRS = (os.path.join(BASE_DIR,'nombre_proyecto/static'),)
+la carpeta static debe estar dentro del proyecto y dentro de la carpeta debe estar 3 carpetas(css,js,imagen)
+
+{% load static %}tag q se usa para que permita cargar archivos estaticos, al inicio del documento...
+
+<link type 'text/css' href='{% static 'css/archivo.css' %}' rel=''> este es el caso de archivos css
+<script type='text/javascript' src='{% static 'js/archivo.js %}'></script> caso para file javascript
+<img src='{% static "imagen/name.jpg" %}'>
+
+OJO IMPORTANTE, imagenes staticas se cargan de esa forma..... pero cuando vienen de afuera(dinamicas de una bd) se deben configurar
+de otra forma, primero debemos usar la libreria pilow(), y configurar el SETTINGS	mientras estemos en desarrollo
+porque cuando sea en un servidor se debe usar nginx, en settings se coloca lo siguiente:
+import os
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+luego file url:
+importamos from django.conf import settings
+from django.conf.urls.static import static
+if settings.DEBUG: (Solo debe hacerse en debug)
+	urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+esto es el campo en el modelo:
+imagen = models.ImageField(upload_to='producto', null=True)
+imagen = models.ImageField(upload_to='producto' ), recuerde q en la base de datos se guarda es la ruta
+en la raiz del proyecto se crea una CARPETA MEDIA, que es donde se van a guardar y la base de datos guardara
+{% for i in test %}
+	<img src="{{ i.imagen.url }}" alt="imagen producto"> desde un html se puede llamar el campo asi con un for  (.url importante)
+sin esto no se cargaria la imagen ya que la base de datos devuelve es una ruta...
+	<img src="{% static 'app/img/images.png'  %}" alt="imagen producto">
+
+
+
+
+
+
+
+

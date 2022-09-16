@@ -1,0 +1,12 @@
+***************************************Base datos*******************************
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'biblioteca_junio',
+        'USER':'root',
+        'PASSWORD': '12345678',
+        'HOST':'10.0.2.15',
+        'PORT':'3309',
+    }
+}

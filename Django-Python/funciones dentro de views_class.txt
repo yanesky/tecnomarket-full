@@ -1,0 +1,90 @@
+funciones o metodos dentro de views_class:
+*******************ejemplo*********************
+class ListarLibros(ListView): # listview solo provee de un metodo get, porque solo muestra un listado,
+			      # si usamos un metodo post para eso nos vamos a la clase padre VIEW
+    model = Libro
+    template_name = 'libro/libro/libro_listar.html' # queryset = Libro.objects.all()
+    queryset = Libro.objects.filter(estado=True)
+
+class ListarLibros(View): #no esta estructurado para generar automaticamente un metodo GET.... 
+			  #si lo dejamos asi daria error 405, para solucionar agregamos un metodo def get()
+    model = Libro
+    template_name = 'libro/libro/libro_listar.html' # queryset = Libro.objects.all()
+    queryset = Libro.objects.filter(estado=True)
+    **entonces:
+
+class ListarLibros(View): 
+    model = Libro
+    template_name = 'libro/libro/libro_listar.html' # queryset = Libro.objects.all()
+    def get(self,request,*args,**kwargs):
+        queryset = Libro.objects.filter(estado=True)# no seria muy escalable porque si necesito hacer otra consulta
+						    # en otro metodo tendria que reescribir codigo.    
+        context = {
+            'object_list':queryset
+        }
+        return render(request,self.template_name, context)
+mas escalable:
+class ListarLibros(View): 
+    model = Libro
+    template_name = 'libro/libro/libro_listar.html' # queryset = Libro.objects.all()
+    def get_queryset(self):
+        queryset = Libro.objects.filter(estado=True)    
+        return queryset
+    def get(self,request,*args,**kwargs):
+        context = {
+            'object_list':self.get_queryset
+        }
+        return render(request,self.template_name, context)
+mucho mas escalable:
+class ListarLibros(View): 
+    model = Libro
+    template_name = 'libro/libro/libro_listar.html' # queryset = Libro.objects.all()
+    def get_queryset(self):
+        queryset = Libro.objects.filter(estado=True)    
+        return queryset
+    def get_context_data(self, **kwargs):
+        contexto = {}
+        contexto['object_list']=self.get_queryset
+        contexto['form']= self.form_class
+        return contexto
+    def get(self,request,*args,**kwargs):
+        return render(request,self.template_name, self.get_context_data())
+
+class EditarLibros(UpdateView):
+    model = Libro
+    template_name= 'libro/libro/libro_listar.html'
+    form_class = LibroForm
+    success_url= reverse_lazy('libro:listar_libros')
+	
+    #esto se hace porque updateview devuelve un object que lo podemos usar para object.id
+    def get_context_data(self, **kwargs): 
+        context = super().get_context_data(**kwargs) #como viene de editar se trae la instancia, y ya trae el context_data
+        context['object_list'] = self.model.objects.filter(estado=True)
+        return context
+
+ojo en caso de un editar: recordar que si se necesitara obtener un url 'xxxx' x.id
+esto se puede conseguir porque esta clase devuelve siempre un objecto
+class EditarLibros(UpdateView):
+    model = Libro
+    template_name= 'libro/libro/modallibro.html'
+    form_class = LibroForm
+    success_url= reverse_lazy('libro:listar_libros')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form']= self.form_class #esto es tacito se ejecuta internamente lo muestro solo apra que se vea
+        context['object']= self.get_object() #esto es tacito se ejecuta internamente lo muestro solo apra que se vea
+        context['object_list'] = self.model.objects.filter(estado=True)
+        return context
+
+
+*****************ListView metodo get_queryset(self):****************
+class ListarAutor(ListView):
+    model = Autor
+    template_name = 'libro/autor/listar_autor.html'
+    context_object_name = 'autores'
+
+    def get_queryset(self): #si esto no esta django lo llama internamente
+	print('hola queryset')
+	self.queryset = self.model.objects.all()
+	return self.queryset

@@ -1,0 +1,77 @@
+Login/logout
+******************old version, antes de la version 2.0 de django***********
+OJO:
+from django.contrib.auth.views import login, logout_then_login (SE COLOCA EN LA URLS GLOBAL)
+urlpatterns += [path('',login,{'template_name':'login.html'},name = 'login'),]
+urlpatterns += [path('logout/',logout_then_login,name = 'logout'),]
+
+OJO: login y logout_then_login son funciones
+LOGIN_REDIRECT_URL = reverse_lazy('index') # OJO: esta linea va en el settings, recuerde que al hacer login lo enviara a este sitio
+LOGOUT_REDIRECT_URL = reverse_lazy('login')# OJO: esta linea va en el settings
+
+para protejer las rutas existen varias formas:
+1.- redefinir la clase de una vista:
+class ListadoAuto(listview): # capitulo 47 clase developerpe
+	def get(self,request,*args,**kwargs):
+		if request.user.is_autheticated:
+			return render(self.template_name)
+		else:
+			return redirect('login')
+
+2. con decoradores
+nos vamos al archivo urls que deseamos protejer
+OJO: from django.contrib.auth.decorators import login_required
+y luego con ese login_required vas a enserrrar bien sea la funcion o la clase de la url ej:
+path('listar_autor/',login_required(listarAutor), name = 'listar_autor'),
+path('clistar_autor/',login_required(ListarAutor.as_view()), name = 'clistar_autor'),
+tambien puedes colocar el login_required sobre la clase o la funcion			
+*********************************************************************************
+-. protejer la rutas cualquier puede acceder
+django nos provee de un login y logout que brinda todo el tema de seguridad
+
+************************************************html************************************************************************
+login.html --->
+</head>
+<body class="bg-dark">
+    <div class="sufee-login d-flex align-content-center flex-wrap">
+        <div class="container">
+            <div class="login-content">
+                <div class="login-logo">
+                    <a href="index.html">
+                        <img class="align-content" src="images/logo.png" alt="">
+                    </a>
+                </div>
+                <div class="login-form">
+                    <form method="POST">
+                      {% csrf_token %}
+                        <div class="form-group">
+                          {% if form.error_messages %}
+                              <div class="alert alert-danger alert-dismissible" role="alert">
+                                <button type="button" class="close" data-dismiss = "alert" aria-label = "Close">
+                                  <span aria-hidden = "true">&times;</span>
+                                </button>
+                                <strong>Advertencia: </strong> {{ form.get_invalid_login_error }}
+                              </div>
+                          {% endif %}
+                            <label>Nombre de usuario</label>
+                            {{ form.username }}
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            {{ form.password }}
+                        </div>
+                        <button type="submit" class="btn btn-success btn-flat m-b-30 m-t-30">Iniciar Sesión</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@2.2.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+
+</body>
+</html>
+************************************************************************************************************************

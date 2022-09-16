@@ -1,0 +1,14 @@
+Autenticacion:
+agregas los permisos en el admin a los distintos usuario o grupos
+lo mas basico es esconder los link a los usuarios que no tengan autorizacion.
+se coloca asi en el html
+
+{% if perms.app.add_producto %} o {% if perms.app.view_producto %} o {% if perms.app.change_producto %}
+	se mostrara quien tenga estos permisos..... 
+{% endif % }
+recuerde que esta es la forma mas basica de proteger, pero lo ideal es por backend y para ello se debe hacer lo siguiente:
+views.py --->  from django.contrib.auth.decorators import login_required, permission_required
+@permission_required('app.add_producto')---@permission_required('app.view_producto')--@permission_required('app.change_producto')
+@permission_required('app.delete_producto') -> esto se coloca arriba de las respetivas funciones, y el login_required se pone arriba tambien 
+de los endpoint que quisieras protejer
+

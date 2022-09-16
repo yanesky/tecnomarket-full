@@ -1,0 +1,65 @@
+DRF
+serializers ----> convertir datos a JSon
+los Serializers su integracion es muy parecida a la de los Forms
+lo *PRIMERO* es instalar django-rest-framework ya que el django normal no cuenta con esas utilida de serializar data en json
+despues *SEGUNDO* colocarlo en el settings en lista de app 'rest_framework',
+luego *TERCERO* crear un archivo serializers.py -----> from rest_framework import serializer   *** y me traigo la bd que quiera serializar from .models import name_modelo
+en la vista*CUARTO*  o views.py ---> from rest_framework import viewsets y from .serializer.py import ProductoSerializer
+en ese views creamos una clase que herede de viewsets  ---> se encargara de tomarlos datos, guardar los datos si es necesario, transformarlos a json.
+queryset, serializer_class
+class ProductoViewset(viewsets.ModelViewSet):
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializers
+
+URLS --->
+from rest_framework import routers
+router = routers.DefaultRouter() # nos permite crear las url necesarias para nuestra api, 
+# el router crea las url para add,edite,change,delete (crud) y se pasan por el path de abajo (localhost:8000/api/producto
+router.register('producto', ProductoViewset) # entidad 
+urlpatterns = [
+    -->> path('api/', include(router.urls)), # se registra en el path y se coloca el include
+]
+
+---------------------------------------
+en campos con forenig key solo muestra el id es decir un numero para solucionar eso tenemos 2 maneras:
+en serializers.py -->
+class ProductoSerializers(serializers.ModelSerializer):
+    nombre_marca = serializers.CharField(read_only=True, source='marca.nombre')  **esta es la linea que se debe colocar
+    class Meta:
+        model = Producto
+        fields = '__all__'
+y segundo tener un serializador dentro de otro:
+supongamos que al jalar un nombre este tiene otros campos, y para no poner campo por campo como arriba
+class ProductoSerializers(serializers.ModelSerializer):
+    #nombre_marca = serializers.CharField(read_only=True, source='marca.nombre')
+    marca = MarcaSerializer(read_only=True)
+    class Meta:
+        model = Producto
+        fields = '__all__'
+agregar esta linea en el caso de un combobox marca_id = serializers.PrimaryKeyRelatedField(queryset=Marca.objects.all(), source='marca')
+********** si desea buscar por la url ejemplo 127.0.0.1:8000/api/producto/?nombre=Tele
+preparamos la vista de esta forma
+class ProductoViewset(viewsets.ModelViewSet):
+    queryset = Producto.objects.all()
+    serializer_class = ProductoSerializers
+    
+    def get_queryset(self):
+        productos = Producto.objects.all()
+        nombre = self.request.GET.get('nombre')
+        if nombre:
+            productos = Producto.objects.filter(nombre__contains=nombre)
+            return productos
+        return productos
+***************************************************************
+puedo agregar otra entidad 
+url:
+router.register('producto', ProductoViewset) # entidad 
+router.register('marca', MarcaViewset) # entidad2 esta es la segunda
+views:
+class MarcaViewset(viewsets.ModelViewSet):
+    queryset = Marca.objects.all()
+    serializer_class = MarcaSerializer
+
+
+
+

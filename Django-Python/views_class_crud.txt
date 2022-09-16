@@ -1,0 +1,71 @@
+views_class
+las clases son para hacer tareas cotidianas
+*******************************View********************************************
+class TemplateView(View):# lo que hace internamente con 
+    template_name = ''
+    def get(self,request,*args,**kwargs):
+        return render(request,template_name)
+class Inicio(TemplateView):
+    template_name= "index.html"
+
+******************************TemplateView********************************************
+esto es solo para mostrar un template
+from django.views.generic import View
+#View es la clase base para todas las demas templateview,
+class Inicio(View):#metodos especificos, get,post,put,delete ya sabra por el metodo dispatch,
+    def get(self,request,*args,**kwargs):
+        return render(request,'index.html')
+# con esto se ofrece una mejor estructura del codigo....
+class Inicio(TemplateView):
+    template_name= "index.html"
+*****asi seria con funciones
+def home(request):
+    return render(request,'index.html')
+**************************************************************************
+1-.dispatch valida la peticion y elige que metodo http se utilizo para la solicitud
+2-.http_method_not_allowed() retorna un error cuando se utilza un metodo http no sooportado o definid
+3-.options
+*****************************ListView*********************************************
+from django.views.generic import ListView
+class ListarAutor(ListView):
+    model = Autor
+    template_name = 'libro/listar_autor.html'
+    context_object_name = 'autores'
+    queryset = Autor.objects.filter(estado=True)
+    print(queryset)
+    #ojo va a devolver un object_list si lo quieres dejar igual
+    #usa un context_objects_name = 'xxxxx'
+
+****************************************************UpdateView**********************************************************
+class EditarAutor(UpdateView):
+    model = Autor
+    template_name= 'libro/crear_autor.html'
+    form_class = AutorForm
+    success_url= reverse_lazy('libro:listar_autor')
+nota: importanticimo recuerde que el esta esperando de la url un PK y no un ID ojo
+nota:OJO IMPORTANTEEEE ESTE ENVIARA UN DICIONARIO 'form'=Formulario.... osea en tu html pones form.nombre y asi.....
+ej:<div class="col col-md-3">{{ form.apellidos.label }}</div>
+    <div class="col-12 col-md-9">{{ form.apellidos }}</div>
+****************************************************CreateView**********************************************************
+class CrearAutor(CreateView):
+    model = Autor
+    template_name= 'libro/crear_autor.html'
+    form_class = AutorForm
+    success_url= reverse_lazy('libro:listar_autor')
+nota:OJO IMPORTANTEEEE ESTE ENVIARA UN DICIONARIO 'form'=Formulario.... osea en tu html pones form.nombre y asi.....
+****************************************************DeleteView**********************************************************
+class EliminarAutor(DeleteView):
+    model = Autor
+    success_url = reverse_lazy('libro:listar_autor')
+nota: el html se debe llama de esta forma "autor_confirm_delete.html", sino no servira recuerde que es una pantalla
+de confirmacion para no borrar algo por error (ojo el autor_ ese nombre variara dependiendo el modelo) y en el diccionario
+envia el {{ object }}
+******************************************DeleteView usando funcion def post******************************************************
+class EliminarAutor(DeleteView):
+    model = Autor
+    #success_url = reverse_lazy('libro:listar_autor') # no se puede usar cuando se usa un post
+    def post(self,request,pk,*args,**kwargs):
+        object = Autor.objects.get(id=pk)
+        object.estado = False
+        object.save()
+        return redirect('libro:listar_autor')

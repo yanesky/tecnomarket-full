@@ -1,0 +1,29 @@
+urls
+
+**********global:***************
+from django.urls import path,include
+
+urlpatterns = [
+    path('libro/',include(('apps.libro.urls','libro'))),
+]
+
+**********En_apps**************
+from django.urls import path
+from .views import crearAutor,listarAutor,editarAutor,eliminarAutor
+urlpatterns = [
+    path('crear_autor/',crearAutor, name = 'crear_autor'),
+]
+
+** se llamaria desde un template {% url 'libro:crear_autor' %}
+
+*************URLS AVANZADAS**********************
+path('inicio_listar_usuario/',login_required(TemplateView.as_view(
+        template_name = 'usuarios/listar_usuarios.html'
+    )), name = 'inicio_listar_usuario'),
+////
+path('listar_usuario/',login_required(ListarUsuario.as_view()),{'parametro_extra':'holis'},name = 'listar_usuario'),
+# FIJATE QUE SE PASA EL parametro_Extra como un diccionario y abajo usamos el **kwargs; averiguar como se pasa el argumento solo
+def get(self,request,parametro_extra,*args ,**kwargs ):
+        if request.is_ajax(): #recuerde que apunta a la misma url entonces se hacen peticiones con ajax y con navegador
+            print(self.kwargs['parametro_extra']) #dos forma de verlo
+            print(parametro_extra) #dos forma de verlo

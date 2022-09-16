@@ -1,0 +1,28 @@
+
+#serializer
+class ProductSerializer(serializers.ModelSerializer):
+    
+    frequency_display = serializers.SerializerMethodField()
+
+    class Meta:
+    model = Product
+    fields = (
+        'frequency_display')
+
+        def get_frequency_display(self, obj):
+            prescription = self.get_or_update_product_prescription(obj)
+            return prescription.get_frequency_type_display() if prescription else '' OJO
+				get_ **frequency_type** _display()
+
+********************
+#esto viene del modelo          
+FREQUENCY_FIXED = 0
+FREQUENCY_CUSTOM = 1
+FREQUENCY_DAILY = 2
+FREQUENCY_BY_DAY = 3
+
+FREQUENCY_TYPES = (
+    (FREQUENCY_FIXED, _('Fixed')),
+    (FREQUENCY_CUSTOM, _('Custom')),
+    (FREQUENCY_DAILY, _('Daily')),
+    (FREQUENCY_BY_DAY, _('Fixed by day'))

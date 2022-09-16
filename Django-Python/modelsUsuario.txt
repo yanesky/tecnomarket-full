@@ -1,0 +1,98 @@
+modelo usuario personalizado:
+ojo se puede usar el incluido en django, pero no podemos ver en la necesidad de agregar nuestro propio usuario.
+* podemos agregar campos al modelo usuario definido por django. podemos hacer una clave foranea apuntando a User.
+**********************sobre escribir el usuario de django agregando otros campos***********************************
+from django.contrib.auth.models import User
+class usuariox(models.Model):
+	usuario=models.forenignkey(User, on_delete=models.CASCADE)
+	fechacumpleanos = models.DateField()
+este es solo para extender los campos del models usuario.
+**************************************************sobre escribir tu propio usuario***********************************
+-.vamos hacer hacer desde cero, pero desde el modelo usuario, no tiene sentido si django nos ofrece clases y metodos 
+ya pensados de gente que se dedica a mas seguridad, y no ponernos a reinventar la rueda. User hereda de Abstracbaseuser
+metodos: username, clean, is_authenticate, set_password
+
+from django.db import AbstracBaseUser	
+from django.contrib.auth.models import BaseUser	
+
+views: 
+
+urls:
+
+models:
+
+from distutils.command.upload import upload
+from unittest.util import _MAX_LENGTH
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser
+
+class UsuarioManager(BaseUserManager): ESTE SE EXPLICA ABAJO DEBE COPIARSE ACA
+
+class Usuario(AbstractBaseUser):
+    username = models.CharField('Nombre de usuario', unique= True, max_length= 100)
+    email = models.EmailField('Correo Electronico', max_length=254, unique=True)
+    nombres = models.CharField('Nombres', max_length=200, blank=True, null=True)
+    apellidos = models.CharField('Apellidos', blank=True, null=True,max_length=100)
+    imagen = models.ImageField('Imagen de Perfil',upload_to='perfil/', height_field= None, width_field= None, max_length=255)#archivos media/
+    usuario_activo = models.BooleanField(default = True) # usuario activo o no
+    usuario_administrativo = models.BooleanField(default = False)#is_staff
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email','nombres','apellidos']
+
+    def __str__(self):
+        return self.nombres
+
+    def has_perm(self, perm, obj = None):
+        return True
+
+    def has_module_perms(self, app_label):
+        return True
+
+    @property
+    def is_staff(self):
+        return self.usuario_administrativo
+
+***Nota: upload_to='perfil/' es una carpeta que se creara en  archivos media que esta configurado en settings
+USERNAME_FIELD: hace referencia a un parametro unico, puede ser username o email.
+REQUIRED_FIELDS: cuales son los campos requeridos si o si./ creados por consola, createsuperuser
+def has_perm: utilidades para que sea usado en el admin de django. el admin lo pide
+def has_module_perms:utilidades para que sea usado en el admin de django. el admin lo pide
+def is_staff:si pertenece al equipo de administracion.sino el usuario no tiene ese privilegio de ver el admin.
+***selfmodel.OBJECTS.--> esto es del ORM y funciona en 2 etapas, primero es comunicarse con el modelo (self.model o nombre_modelo) y
+***despues a traves del atributo objects (objectsmanager) osea segundo el objecto se conecto con su manager a traves 
+***del object, los objectmanager tambien se pueden sobreescribir. (objects = ObjectManager()) siempre esta ahi por eso no se escribe.
+
+*************************creacion de un manager:********************************************
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+
+class UsuarioManager(BaseUserManager):
+    def create_user(self,email,username,nombres,apellidos,password):
+        if not email:
+            raise ValueError('El usuario debe tener un correo')
+        usuario = self.model(
+            username=username,
+            email = self.normalize_email(email), #IMPORTANTE NORMALIZE_EMAIL VALIDA QUE SEA CORRECTO EL CAMPO
+            nombres = nombres,
+            apellidos = apellidos,
+            password = password
+        )
+        usuario.set_password(password) #IMPORTANTE SET_PASSWORD ES UN METODO DE BASEUSERMANAGER, ENCRIPTA LA CONTRASENA
+        usuario.save()
+        return usuario
+    def create_superuser(self,username, email, nombres, apellidos, password):
+        usuario = self.create_user( 
+            email,
+            username= username,
+            nombres = nombres,
+            apellidos = apellidos,
+            password = password        
+        )
+        usuario.usuario_administrativo = True
+        usuario.save()
+        return usuario
+********************************************************************************************
+
+settings:
+
+AUTH_USER_MODEL = 'usuarios(aplicacion).Usuario(modelo)'

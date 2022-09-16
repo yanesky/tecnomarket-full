@@ -1,0 +1,77 @@
+validaciones con moises sepulveda
+validaciones standars y personalizadas
+forms.py
+class ProductoForm(forms.ModelForm):
+    nombre = forms.CharField(min_length=5)
+    imagen = forms.ImageField(required=True)
+    precio = forms.IntegerField(min_value= 1, max_value=140000000)
+    
+    class Meta:
+
+html: 
+<form action="" method="post">
+   {% if form.errors %}
+     <strong style="color:red">
+      Existen errores en el formulario
+     </strong>
+   {% endif %}
+form:
+class CustomUserCreationForm(UserCreationForm):
+    
+    username = forms.CharField(required=False, validators=[ validators.MinLengthValidator(3, 'El titulo es demasiado corto'),
+        validators.MaxLengthValidator(20, 'El titulo sobrepasa mucho texto')])
+    first_name = forms.CharField(required=False, validators=[ validators.MinLengthValidator(3, 'El nombre es demasiado corto'),
+        validators.MaxLengthValidator(20, 'El nombre sobrepasa mucho texto')])
+    last_name = forms.CharField(required=False, validators=[ validators.MinLengthValidator(3, 'El apellido es demasiado corto'),
+        validators.MaxLengthValidator(20, 'El apellido sobrepasa mucho texto')])
+    email = forms.EmailField(validators=[validators.EmailValidator])
+    
+    class Meta:
+        model=User
+        fields = ['username','first_name','last_name', 'email','password1','password2']
+
+******************************************************************************************************************
+validacion personalizada
+def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        existe = Producto.objects.filter(nombre__iexact=nombre).exists()
+        if existe:
+            raise ValidationError('esta duplicado este nombre')
+        return nombre
+***************************************************************************
+validacion con un archivo aparte validatiors.py
+from django.forms import ValidationError
+#esto es para personalizar las validaciones
+#validador como function 
+#validador como clase
+
+class MaxSizeFileValidator:
+
+    def __init__(self, max_file_size=5):
+        self.max_file_size = max_file_size
+        
+    def __call__(self, value): # inyecto lo que el usuario escriba en la caja, si es un archivo inyecta el archivo
+        size = value.size
+        max_size = self.max_file_size * 1048576
+        if size > max_size:
+            raise ValidationError(f'El tamano maximo del archivo debe ser de {self.max_file_size}MB')
+        return value
+
+luego me lo llevo al forms.py
+from .validators import MaxSizeFileValidator
+class ProductoForm(forms.ModelForm):
+    nombre = forms.CharField(min_length=5)
+    imagen = forms.ImageField(required=False, validators=[MaxSizeFileValidator(max_file_size=2)])
+***************************************
+RECUERDE QUE LAS VALIDACIONES SOLO SE VEN EN NUESTRO FORM, SI DESEAS QUE EN EL ADMIN SE REFLEJEN DEBES SUSTITUIR EL FORMS DEL ADMIN Y PONER EL NUESTRO
+ESTO SE DEBE AGREGAR EN EL ADMIN:
+from .forms import ProductoForm
+class ProductoAdmin(admin.ModelAdmin):
+    list_display = ["nombre","precio","nuevo","marca",]
+    list_editable = ["precio"]
+    search_fields = ["nombre"]
+    list_filter = ["nuevo"]
+    list_per_page = 5
+    form = ProductoForm   ---> esta es la linea que se coloco muy facil y YA CON ESTO ESE MODELO EN NUESTRO ADMIN USARA NUESTRO FORMULARIO
+
+

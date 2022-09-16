@@ -1,0 +1,55 @@
+Dudas:
+file forms:
+class FormularioLogin(AuthenticationForm): 
+-->
+    def __init__(self,*args,**kwargs):
+        super(FormularioLogin,self).__init__(*args, **kwargs)
+-->
+        self.fields['username'].widget.attrs['class']= 'form-control'
+        self.fields['username'].widget.attrs['placeholder']= 'Nombre de Usuario'
+        self.fields['password'].widget.attrs['class']= 'form-control'
+        self.fields['password'].widget.attrs['placeholder']= 'Contrasena'
+************************************************************************************************
+class Login(FormView):
+    template_name= 'login.html'
+    form_class = FormularioLogin
+    success_url= reverse_lazy('index')
+-->
+    #never_cache 
+    #csrf_protect
+    @method_decorator(csrf_protect)
+    @method_decorator(never_cache)
+    def dispatch(self,request,*args,**kwargs):
+        if request.user.is_authenticated:
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            return super(Login,self).dispatch(request,*args,**kwargs)
+   
+    def form_valid(self, form): # este metodo es encargado de validar el formulario de login, el form es
+				# el form_class de arriba, y este metodo se llamara antes del post
+        login(self.request,form.get_user()) # esta es la funcionabilidad extra expresada abajo
+        return super(Login,self).form_valid(form)
+-->
+le agregamos una funcionabilidad extra, django sabes que quiero que con los datos que te pase me inicies una
+sesion.... para esto necesitamos la funcion login from django.contrib.auth import login
+
+*************************************************************************************************
+<form action="{% url 'libro:editar_libros' object.id %}" method="POST">
+SE PUEDE METER UNA CONDICION DENTRO DE UN TAG???????????
+<form action="{% url 'libro:editar_libros' {% if object %}esto se podra???{% endif %}" method="POST">
+*************************************
+que pasa, si hago un commit subo los cambios, pero resulta que quiero hechar para atras y cambio el titulo del commit 
+pero ahora cuando subo queda el commit anterior y ahora el que edite?
+************************************
+def get_total_patients(self, obj):
+        total_patients = Treatment.objects.filter(product=obj).values_list(
+        'patient', flat=True).distinct().count()
+        return total_patients
+ def get_active_patients(self, obj):
+        active_patients = Treatment.objects.filter(product=obj,status__in=TREATMENT_AVAILABLE).values_list(
+        'patient', flat=True).distinct().count()
+        return active_patients
+
+status (__in significa q busque en una lista status__in = []) ; o status = int
+/***********************/***********************/***********************/***********************
+plugin de javascript para representar los datos de tiempo date importante

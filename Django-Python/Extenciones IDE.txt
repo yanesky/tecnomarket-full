@@ -1,0 +1,25 @@
+programa pequenos que se meten encima para facilitar la programacion
+
+auto close tag
+color picker
+cornflakes-linter
+djaneiro-django snippets
+django
+django template snippets
+docker
+error lens
+gitlens-git supercharged
+html css suport
+icon fonts
+jquery code snippets
+jupyter
+jupyter notebook renderers
+live server
+magicpython
+mysql
+prettier-code formatter
+pylance
+python
+python indent
+remote - containers
+

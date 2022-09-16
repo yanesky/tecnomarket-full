@@ -1,0 +1,57 @@
+moises sepulveda video parte 11
+con el mecanismo de cookis y sesiones // ya esto lo tiene django
+en settings: MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage' #frameword de mensajeria
+en views: from django.contrib import messages
+colocar esta linea antes de un return-->messages.success(request,'Modificado Correctamente')
+return redirect(to='listar')
+en template: donde quieres que se muestre el mensaje, cuando se redirija pintara eso
+{% if messages %}
+        {% for m in messages%}
+        	{{m}}
+	{% endfor %}
+{% endif %}
+
+
+************PARA AGREGAR EL SWEEET ALERT NO REDIRIGIMOS AL SITIO SWEETALERT*************
+buscamos el CDN
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+LUEGO el mismo codigo lo utilizo para modificarlo, para agregarle codigo javascript ATENTOS
+DEBE COLOCARSE DEBAJO DE EL CDN SINO NO LO VA A CARGAR
+{% if messages %}
+        {% for m in messages%}
+        	{{m}}
+	{% endfor %}
+{% endif %}
+******* SE HIZO OTRO BLOQUE PARA QUE CUANDO SE FUERA A ELIMINAR ME SALTARA UN MODAL DICIENDO ESTA SEGURO?
+ENSAYAR:
+{% block js %}
+	<script>
+    	    function eliminarProducto(id) {
+    	    	console.log(id)    -----> lo puedes ver en inspector de pagina F12
+	    }
+{% endblock %}
+
+{% block js %}
+    <script>
+        function eliminarProducto(id) {
+            Swal.fire(
+                {
+                    'title':'Estas seguro de borrar estos?',
+                    'text':'Esta accion despues no se puede deshacer',
+                    'icon':'question',
+                    'showCancelButton':true,
+                    'cancelButtonText':'No, Cancelar',
+                    'confirmButtonText':'Si,Eliminar',
+                    'reverseButtons':true
+                })
+                .then(function(result) {
+                    console.log(id)
+                    if(result.isConfirmed) {
+                        window.location.href = "/eliminar/"+id
+                    }
+                })
+        }
+    </script>
+{% endblock %}
+CON ESTE SE LLAMA ----> <a href="#" onclick="eliminarProducto({{i.id}})" class="btn btn-danger">Eliminar</a>
+

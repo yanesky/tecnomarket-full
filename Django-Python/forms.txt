@@ -1,0 +1,265 @@
+forms
+********************no me carga el actualizar porque devuelve un value pero como puse el codigo no lo agarra asi********
+<div class="row form-group">
+   <div class="col col-md-3"><label for="text-input" class=" form-control-label">Nombres</label></div>
+   <div class="col-12 col-md-9"><input type="text"  name="nombre" placeholder="Ingrese el nombre del autor" class="form-control" ></div>
+</div>
+***********************************************para corregir******************************************************************************
+<div class="row form-group">
+   <div class="col col-md-3">tambie quite los label</div>
+   <div class="col-12 col-md-9">'quite los input'</div> #*********pero esto se quedaria sin estilos, ni placeholder
+</div>
+***********************************************solucion****************************************************************************
+en el archivo forms.py
+class AutorForm(forms.ModelForm):
+    class Meta:
+        model = Autor
+        fields = ['nombre','apellidos','nacionalidad','descripcion']
+        labels = {
+            'nombre':'Nombre del Autor',
+            'apellido':'Apellidos del autor',
+            'nacionalidad':'Nacionalidad del autor',
+            'descripcion':'Pequena descripcion',
+        }
+////////ahora en el html/////////
+ <div class="row form-group">
+      <div class="col col-md-3">{{ autor_form.nombre.label }}</div> #ojo se ve pero sin estilo
+      <div class="col-12 col-md-9">{{ autor_form.nombre }}</div>  #ojo se ve pero sin estilo# 
+ </div>
+nota: si llegara a borrar los labels del form, seguiria apareciendo un label por default.
+***************Sabras que ya se muestra pero sin estilo? asi es y la solucion es la siguiente WIDGETS******
+los widgets es la manera como renderizamos el campo donde vamos a escribir la informacion.... 
+en el forms abajo de label ponemos:
+widgets = {
+            'nombre': forms.TextInput(
+                attrs = {
+                    'class':'form-control',
+                    'placeholder':'Ingrese el nombre del autor', 
+                    'id':'nombre', 
+                }
+            ),
+#### puede buscar en la documentacion sobre mas widgets
+otra forma de declarar widget:
+        self.fields['username'].widget.attr['class']= 'form-control'
+        self.fields['username'].widget.attr['placeholder']= 'Nombre de Usuario'
+        self.fields['password'].widget.attr['class']= 'form-control'
+        self.fields['password'].widget.attr['placeholder']= 'Contrasena'
+*************************************************************************************************************************
+forms/widgets cuando hay un campo many to many
+existen varia opciones para este caso
+buscar esto en documentacion : Selector and checkbox widget
+primera opcion: *SelectMultiple
+segunta option: *CheckboxSelectMultiple
+
+ widgets = {
+            'autor_id': forms.SelectMultiple(
+                attrs = {
+                    'class':'form-control',
+                    'placeholder':'Seleccione autores', 
+                    'id':'autor_id', 
+                }
+            ),
+
+
+forms/widgets para lo relacionado a fechas
+DateInput
+DateTimeInput
+TimeInput
+SelectDateWidget
+'fecha_publicacion': forms.SelectDateWidget(),
+'fecha_publicacion': forms.DateTimeInput(),
+***********************************************************************************************************************
+**************FORM PARA USUARIOS(creando nuestro propio formulario y no el de django UserCreationForm)*****************
+from django.contrib.auth.forms import UserCreationForm
+class FormularioUsuario(forms.ModelsForm ):
+    #password1 es un campo adicional que no tiene que ver con el modelo usuario que se define en class meta, recuerde que queremos en password
+    password1 = forms.CharField(label = 'contrasena', widget=forms.PasswordInput(
+        attrs= {
+            'class':'form-control',
+            'placeholder':'Ingrese su contrasena',
+            'id':'password1',
+            'required':'required',
+        }
+    ))
+    #password2 es un campo adicional que no tiene que ver con el modelo usuario que se define en class meta, recuerde que queremos en password
+    password2 = forms.CharField(label = 'confirmar contrasena', widget=forms.PasswordInput(
+        attrs= {
+            'class':'form-control',
+            'placeholder':'Confirme su contrasena',
+            'id':'password2',
+            'required':'required',
+        }
+    ))
+
+    class Meta: 
+        #indica que vamos a usar los campos del modelo que se coloque abajo al igual que los campos... si quieres crear
+        #campos adicionales, los debes poner fuera de esta clase meta, ejemplo password1 y password2
+        model = Usuario
+        fields = ('email','username','nombres','apellidos')
+        widgets = {
+            'email':forms.EmailInput(
+                attrs= {
+                    'class':'form-control',
+                    'placeholder' : 'Correo Electronico',
+                }
+            ),
+            'nombre':forms.TextInput(
+                attrs= {
+                    'class':'form-control',
+                    'placeholder' : 'Ingrese su nombre',
+                }
+            ),
+            'apellidos':forms.TextInput(
+                attrs= {
+                    'class':'form-control',
+                    'placeholder' : 'Ingrese su apellido',
+                }
+            ),
+            'username':forms.TextInput(
+                attrs= {
+                    'class':'form-control',
+                    'placeholder' : 'Ingrese su nombre de usuario',
+                }
+            )
+        }
+
+VALIDACIONES:
+
+	CLEAN: es un metodo que valida de acuerdo a nuestra necesitad..
+	def clean_password2(self):
+		password1 = self.cleaned_data.get('password1')
+		password2 = self.cleaned_data['password1']
+
+		if password1 != password2:
+			raise forms.ValidationError('Contrasenas no coinciden')
+		return password2
+		
+*************************************************IS_VALID() IMPORTANTICIMO******************************************************
+IS_VALID()-->DEF CLEAN_XXXX(SELF)--->DEF CLEAN(SELF)
+*********************************************************CLEANED_DATA***************************************************************
+CLEANED_DATA: una vez que todos los campos de un formulario sean validados (IS_VALID()), pasan a un diccionario --> cleaned_data
+informacion ya limpia en forma de diccionario.... y tiene un metodo get... cleaned_data.get('xxx')
+OJO ESTA ES OTRA FORMA DE HACERLO................
+class RegistrarUsuario(CreateView):
+    model = Usuario
+    template_name = 'usuarios/crear_usuario.html'
+    form_class = FormularioUsuario
+    success_url= reverse_lazy('usuario:listar_usuario')
+
+    def post(self,request,*args,**kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            #form.save() y si usara este save seria del form.
+            usuario = self.model(
+                username = form.cleaned_data['username'],
+                email =form.cleaned_data['email'],
+                nombres =form.cleaned_data['nombres'],
+                apellidos =form.cleaned_data['apellidos'],
+            )
+            usuario.set_password(form.cleaned_data['password1'])
+            usuario.save()# estee save es del modelo
+            return redirect('usuario:listar_usuario')
+        else:
+            return render(request,self.template_name,{'form':form})
+
+******************************************REDEFINIR EL METODO SAVE() del FORMS*********************************************
+OJO: El save se ejecutara despues de que sea validada la informacion recuerde xx.is_Valid luego xx.save()
+ojo: el save se puede redefinir tanto para el modelo como para el form
+def save(self, commit = True): #COMMIT SIGNIFICA QUE PROCEDA CON EL REGISTRO, EMBOCA AL SAVE DEL  MODELO Y GUARDA EN LA BD
+        user = super().save(commit = False)# COMMIT EN FALSE SIGNIFICA QUE GUARDE LA INSTANCIA
+        user.set_password(self.cleaned_data['password1'])
+        if commit:
+            user.save()
+        return user
+************************************************************************************************************************
+*FORM BY MOISES SEPULVEDA
+el forms.py se crea aparte y se llama from django import forms, django hace los input e imprime el html, se emcapsulan las 
+validaciones. Este form sabe muchas cosas, como guardarlos, validarlos, rellenar el formulario.
+file FORMS.py
+class nameForm(forms.ModelForm):   ---> ModelForm representa el modelo con class Meta: 
+	class Meta:
+		model = nombredelmodelo
+		field = ['cantidad','de','campos'] --> campos que se quieran pintar
+		#field = '__all__'
+	****luego va a las vista****
+file views.py
+importas el formulario
+	def nombrevista(request):
+		data = {
+			'form' = nameForm()
+		}
+		if request.method == 'post':
+			form = nameForm(data=request.POST)\if form.is_valid():form.save()\data['mensaje'] = 'Contacto Guardado'
+							   else: data['form']=form	
+		return render(request,'direccionhtml', data)
+	****luego va a template*****
+file xxx.html
+	<form action="" class="formulario_contacto" method="post">
+		{{ form }}
+	</form>
+	{{ mensaje }}
+***********agregarle BOOTSTRAP A UN FORM***************
+*FORM BY MOISES SEPULVEDA
+*te vas a la pagina de bootstrap , le das a get-started, copias la hoja de estilo css
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css">
+*bootstrap funciona mediante clases
+OJO SI VES EL CODIGO DE ARRIBITA, VERAS QUE NO HAY forma de colocar la clase en ningun lado, entonces tendriamos que hacer los siguiente:
+class nameForm(forms.ModelForm):   ---> ModelForm representa el modelo con class Meta: 
+------>aqui se inyecta el cambio(es una forma pq existe otra) campo= forms.Charlfield(widget=forms.TextInput(attrs={'class':'form-control'}))
+	class Meta:
+		model = nombredelmodelo
+		field = ['cantidad','de','campos']
+-----> otra forma es instalando crispy forms:  django-crispy-forms \ se coloca en el settings 'crispy_forms', y abajito-->CRISPY_TEMPLATE_PACK = 'bootstrap5'
+ *** luego en el template colocas el tag {% load crispy_forms_tags %}  \ y en la variable donde llamas al formulario {{  form | crispy }}
+<form action="" method="post" enctype="multipart/form-data"> ---. ENCTYPE es para enviar imagenes por el formulario \ y en la vista --> form = ProductoForm(data=request.POST, files= request.FILES)
+
+**** tambien puedes declara widgets dentro de class Meta
+class Meta:
+        model = Producto
+        fields = '__all__'
+        widgets = {
+            "fecha_fabricacion":forms.SelectDateWidget()   -------> se puede tomar un plugin de JAVASCRIPT para que se vea mejor
+        }    
+--------------------------------------------------------
+*FORM BY MOISES SEPULVEDA
+from django.contrib.auth.forms import UserCreationForm  (poner en el forms.py, con esto se pinta un propio formulario de django)
+class CustomUserCreationForm(UserCreationForm):
+    pass
+
+y en la views: 
+def registro(request):
+    data = {
+        'form': CustomUserCreationForm
+    } 
+    if request.method== 'POST':
+        formulario = CustomUserCreationForm(data= request.POST)
+        if formulario.is_valid:
+            formulario.save()
+            user = authenticate(username = formulario.cleaned_data['username'], password= formulario.cleaned_data['password1'])
+            login(request, user)
+            messages.success(request, 'Te has registrado Correctamente')
+            return redirect('home')
+        else:
+            print('hola3')
+            data['form']= formulario
+    return render(request, 'registration/registro.html', data)
+
+******************
+from django.contrib.auth import authenticate, login   (por si quieres que al registrarse se loguee de una vez, coloca esto en la view)
+if formulario.is_valid:
+            formulario.save()
+            user = authenticate(username = formulario.cleaned_data['username'], password= formulario.cleaned_data['password1'])
+            login(request, user)
+            messages.success(request, 'Te has registrado Correctamente')
+            return redirect('home')
+
+***************************************
+
+
+
+
+
+
+
+
+

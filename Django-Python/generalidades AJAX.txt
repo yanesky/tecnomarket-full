@@ -1,0 +1,290 @@
+Peticiones Ajax: cap 61 develperpe
+
+***********file index.js***************************
+ruta: static/js/capetaconnombredeapp/index.js --->
+
+/* funciones que van afectar a los templates de ususarios*/
+
+function listadoUsuario(){
+    $.ajax({
+        url: "/usuario/listar_usuario/",
+        type: "get",
+        dataType: "json",  #LA RESPUESTA DEBE SER TIPO JSON SINO DARA PROBLEMAS
+        success: function(response){
+            console.log(response)
+        },
+        error: function(response){
+            console.log(error)
+        },
+    });
+}
+
+$(document).ready(function (){
+    listadoUsuario();
+})
+
+***********en mi html donde quiero realizar los cambios**********************
+{% block extrajs %}
+<script src="{% static 'js/usuarios/index.js' %}" ></script>
+{% endblock  %}
+
+*****************************file main.js***************************
+var $ = jQuery.noConflict(); #para evitar conflictos con librerias jquery
+
+
+/*/*/*/*/*/*/*/****************RETORNAR AJAX RETORNAR JSON (CONSOLA)**************** CAPITULO 62
+FORMA #1
+HACERLO DE FORMA MANUAL CAMPO POR CAMPO
+JSON ES UNA CADENA DE TEXTO NO ES UNA LISTA
+import json
+class ListarUsuario(ListView):
+    # devuelve en su context object_list
+    model = Usuario
+    template_name = 'usuarios/listar_usuarios.html'
+    #queryset= model.objects.filter(usuario_activo=True)
+
+    def get(self,request,*args ,**kwargs ):#SE LEVANTA UN GET PARA PONER CADA CAMPO
+        lista_usuarios=[]
+        for i in self.get_queryset():
+            data_usuario={}
+            data_usuario['id']= i.id
+            data_usuario['nombres']= i.nombres
+            data_usuario['apellidos']= i.apellidos
+            data_usuario['email']= i.email
+            data_usuario['username']= i.username
+            data_usuario['usuario_activo']= i.usuario_activo
+            lista_usuarios.append(data_usuario)#lista de diccionarios
+        print('Este es el tipo de usuario : ',type(lista_usuarios))
+        print('Esta es la lista de usuarios: ', lista_usuarios)
+        #import json
+        data = json.dumps(lista_usuarios)
+        print('Este es el tipo de json : ',type(data))
+        print('Esta es la lista de usuarios json: ', data)
+        #return render(request, self.template_name)
+        return HttpResponse(data,'application/json')
+
+FORMA #2 (serialize) clase capitulo 63
+serialize soporta/trabaja formatos json
+QUE LO HAGA DJANGO
+from django.core.serializers import serialize
+class ListarUsuario(ListView):
+    # devuelve en su context object_list
+    model = Usuario
+    #queryset= model.objects.filter(usuario_activo=True)
+    def get(self,request,*args ,**kwargs ):
+        if request.is_ajax(): #recuerde que apunta a la misma url entonces se hacen peticiones con ajax y con navegador
+            #data = serialize('json', self.get_queryset ())
+            #return render(request, self.template_name)
+            return HttpResponse(serialize('json', self.get_queryset ()),'application/json')#serialize es la forma 2
+        else:
+            return redirect('usuario:inicio_listar_usuario')
+
+/*/*/*/*/*/*/*/*********usar lo que RETORNAR AJAX(response en formato json) para renderizarlo en html**************** CAPITULO 65
+
+function listadoUsuario(){
+    $.ajax({
+        url: "/usuario/listar_usuario/",
+        type: "get",
+        dataType: "json",
+        success: function(response){
+            //console.log(response), aqui va el datatable a futuro
+            $('#tabla_usuarios tbody').html("");
+            console.log(response)// response es lo que nos devuelve la vista
+            //return HttpResponse(serialize('json', self.get_queryset ()),'application/json')
+            for(let i = 0; i < response.length; i++){
+                let fila = '<tr>';
+                fila += '<td>' + (i+1) + '</td>';
+                fila += '<td>' + response[i]["fields"]['username'] + '</td>';// este response es el json que se trae
+                fila += '<td>' + response[i]["fields"]['nombres'] + '</td>';
+                fila += '<td>' + response[i]["fields"]['apellidos'] + '</td>';
+                fila += '<td>' + response[i]["fields"]['email'] + '</td>';
+                fila += '<td><button> Editar </button><button> Eliminar </button></td>';
+                fila += '</tr>';
+                $('#tabla_usuarios tbody').append(fila);
+            }
+            $('#tabla_usuarios').DataTable({
+                language: {
+                    decimal: "",
+                    emptyTable: "No hay información",
+                    info: "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
+                    infoEmpty: "Mostrando 0 to 0 of 0 Entradas",
+                    infoFiltered: "(Filtrado de _MAX_ total entradas)",
+                    infoPostFix: "",
+                    thousands: ",",
+                    lengthMenu: "Mostrar _MENU_ Entradas",
+                    loadingRecords: "Cargando...",
+                    processing: "Procesando...",
+                    search: "Buscar:",
+                    zeroRecords: "Sin resultados encontrados",
+                    paginate: {
+                      first: "Primero",
+                      last: "Ultimo",
+                      next: "Siguiente",
+                      previous: "Anterior",
+                    },
+                  },
+            });
+        },
+
+NOTA: fijate en este id es al que apunta lo hecho alla arriba..
+<table id='tabla_usuarios' class="table">
+     <thead>
+         <tr>
+            <th>#</th>
+            <th>Username</th>
+            <th>Nombres</th>
+            <th>Apellidos</th>
+            <th>Email</th>
+            <th>Opciones</th>
+         </tr>
+      </thead>
+    <tbody>
+    </tbody>
+</table>
+
+************************************generalizar archivo javascript, cerrar modal con onclick ****************************cap 66
+
+<form id="form_creacion" action="{% url 'usuario:crear_usuario' %}" method="POST">
+    {% csrf_token %}
+    <div class="modal-body">
+        {{ form.as_p }}
+    </div>
+    <div class="modal-footer">
+       <button class="btn btn-danger" type="button" onclick="cerrar_modal_nuevo();">Cancelar</button>
+       <button class="btn btn-primary" type="button" onclick="registrar();">Confirmar</button>
+    </div>
+</form>
+
+//////estas funciones se cambiaron de archivol main////antes estaban en cada html, con esto se generaliza//////
+function abrir_modal_edicion(url){
+  $('#edicion').load(url, function(){
+	$(this).modal('show');
+  });
+}
+function crear_modal_nuevo(url){
+  $('#nuevo').load(url, function(){
+	$(this).modal('show');
+  });
+}
+function cerrar_modal_nuevo(){
+	$('#nuevo').modal('hide');
+}
+function cerrar_modal_edicion(){
+	$('#edicion').modal('hide');
+}
+function registrar(){
+	$.ajax({
+		data: $('#form_creacion').serialize(),
+		url: $('#form_creacion').attr('action'),
+		type: $('#form_creacion').attr('method'),
+		success: function(response){
+			console.log('Registrar')
+		},
+		error: function(error){
+			console.log('error garrafal')
+		}
+	});
+}
+
+******************************Registrar Post con Ajax, en una vista(complicado)*************************************** capitulo 67 django2**
+activarBoton() ----> esta funcion se incorpora en otra funcion para activar o desactivar un boton
+
+function activarBoton(){
+	if($('#boton_creacion').prop('disabled')){//pro es propiedad, aqui obtiene propiedad disabled
+		$('#boton_creacion').prop('disabled',false);
+	}else{
+		$('#boton_creacion').prop('disabled',true);
+	}
+}
+///*/*/*/*****************recibir el post
+view:
+class RegistrarUsuario(CreateView):
+    model = Usuario
+    template_name = 'usuarios/crear_usuario modal.html'
+    form_class = FormularioUsuario
+    success_url= reverse_lazy('usuario:listar_usuario')
+    def post(self,request,*args,**kwargs):
+        if request.is_ajax():
+            form = self.form_class(request.POST)
+            if form.is_valid():
+                #form.save() y si usara este save seria del form.
+                usuario = self.model(
+                    username = form.cleaned_data['username'],
+                    email =form.cleaned_data['email'],
+                    nombres =form.cleaned_data['nombres'],
+                    apellidos =form.cleaned_data['apellidos'],
+                )
+                usuario.set_password(form.cleaned_data['password1'])
+                usuario.save()# estee save es del modelo
+                print('El nombre del modelo es: ',self.model.__name__)
+                mensaje = f'{self.model.__name__} registrado correctamente!'
+                error = 'No hay error!'
+                response = JsonResponse({
+                    'mensaje':mensaje,
+                    'error':error
+                })
+                response.status_code = 201
+                return response
+            else:
+                mensaje = f'{self.model.__name__} no pudo ser registrado!'
+                error = form.errors
+                response = JsonResponse({
+                    'mensaje':mensaje,
+                    'error':error
+                })
+                response.status_code = 400
+                return response
+        else:
+            return redirect('usuario:inicio_listar_usuario')
+
+file.js:
+function registrar(){
+    activarBoton()
+  	$.ajax({
+		data: $('#form_creacion').serialize(),
+		url: $('#form_creacion').attr('action'),
+		type: $('#form_creacion').attr('method'),
+		success: function(response){
+			listadoUsuario();
+			cerrar_modal_nuevo();
+		},
+		error: function(error){
+			console.log(error)
+		}
+	});
+}
+
+/********************************************************************************************************************
+En relación a Ajax, la cuestión de visibilidad en la url no resulta relevante (ya que en cualquier caso, la invocación de la url se producirá en segundo plano). Sin embargo, los aspectos de seguridad sí siguen siendo relevantes, por eso debemos tener en cuenta:
+
+- Usaremos GET sólo para operaciones que impliquen consulta/recuperación de datos siempre que valoremos que el cacheado en el navegador no causará problemas.
+
+- Usaremos POST para operaciones que impliquen modificación en el servidor (por ejemplo borrado de datos, actualización, etc.). También puede usarse POST para consulta/recuperación de datos.
+
+REALIZAR PETICIONES AJAX CON POST
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

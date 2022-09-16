@@ -1,0 +1,51 @@
+admin
+
+*python manage.py createsuperuser      para crear un super usuario y poder entrar al admin
+
+*en el file admin de la app agregar los modelos
+ej: from app.models import Marca, Producto
+admin.site.register(Marca)   y asi se podra ver en el admin
+esto es una de las cosas mas potentes que tiene django
+en settings puedes cambiar el lenguaje LANGUAGE_CODE = 'en-us'
+
+*personalizar admin, (plugin)
+pip install django-admin-interface
+se coloca en lista de app
+INSTALLED_APPS = [
+    'admin_interface', (de primerita)
+    'colorfield', (al final)]
+X_FRAME_OPTIONS='SAMEORIGIN' #only if django version >=3
+despues de todo esto se debe hacer make y migrate
+
+*quiere mas columnas:
+en el archivo admin se agrega esto
+class ProductoAdmin(admin.ModelAdmin):
+    list_display = ["nombre","precio","nuevo","marca",] (muestra mas columna con estos campos)
+    list_editable = ["precio"] (permite editar ese campo)
+    search_field = ["nombre"] (se habilita un input donde un escriba el campo a conseguir coincidencias, mas de una)
+    list_filter = ["nuevo"] (un campo buleano, se abre a la derecha una bloque donde se visualiza, pueden ser mas)
+    list_per_page = 1 (registros por pagina a mostrar)
+
+admin.site.register(Producto, ProductoAdmin)
+
+*cambiar el nombre de los encabezados de apps
+te vas para apps.py:
+verbose_name = 'tecnomarket'
+y el installed_apps de settings agregar:
+antes solo se llamaba app y ahora se pone app.apps.AppConfig,
+
+
+*************************************** LEER IMPORTANTE PARA QUE EL FORM SEA VISTO EN EL ADMIN
+RECUERDE QUE LAS VALIDACIONES SOLO SE VEN EN NUESTRO FORM, SI DESEAS QUE EN EL ADMIN SE REFLEJEN DEBES SUSTITUIR EL FORMS DEL ADMIN Y PONER EL NUESTRO
+ESTO SE DEBE AGREGAR EN EL ADMIN:
+from .forms import ProductoForm
+class ProductoAdmin(admin.ModelAdmin):
+    list_display = ["nombre","precio","nuevo","marca",]
+    list_editable = ["precio"]
+    search_fields = ["nombre"]
+    list_filter = ["nuevo"]
+    list_per_page = 5
+    form = ProductoForm   ---> esta es la linea que se coloco muy facil y YA CON ESTO ESE MODELO EN NUESTRO ADMIN USARA NUESTRO FORMULARIO
+
+
+
